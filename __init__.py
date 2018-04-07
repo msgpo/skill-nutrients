@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from mycroft.skills.core import MycroftSkill, intent_file_handler
 from mycroft.util.log import LOG
 from mycroft.audio import wait_while_speaking
@@ -129,9 +128,9 @@ class NutrientsSkill(MycroftSkill):
                 "unit"] + " of " + nutrient["label"]
 
             text = text.replace(" mg", " milligram")\
-                       .replace(u"µg", "microgram")\
+                       .replace(" ug", " microgram")\
                        .replace(" g ", " gram ")\
-                       .replace("kcal", "kilocalories")\
+                       .replace("kcal", "kilo calories")\
                        .replace("cal", "calories")
             sentences.append(text)
         return sentences
