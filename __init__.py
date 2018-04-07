@@ -1,13 +1,14 @@
-from mycroft.skills.core import FallbackSkill, intent_handler, \
-    intent_file_handler
+from mycroft.skills.core import MycroftSkill, intent_file_handler
 from mycroft.util.log import LOG
-import requests, json
+from mycroft.audio import wait_while_speaking
+import requests
+import json
 
 
 __author__ = 'jarbas'
 
 
-class NutrientsSkill(FallbackSkill):
+class NutrientsSkill(MycroftSkill):
     def __init__(self):
         super(NutrientsSkill, self).__init__()
         # free keys for the people
@@ -25,8 +26,15 @@ class NutrientsSkill(FallbackSkill):
     @intent_file_handler("ingredients.intent")
     def handle_ingredients_intent(self, message):
         sentence = message.data["sentence"]
-        # TODO dialog file
-        self.speak(self.pretty_nutrient(sentence))
+        # TODO use dialog file
+        sentences = self.pretty_nutrient(sentence)
+        self.enclosure.deactivate_mouth_events()
+        for idx, s in enumerate(sentences):
+            self.speak(s)
+            if idx >= 2:
+                self.enclosure.mouth_text(s)
+            wait_while_speaking()
+        self.enclosure.activate_mouth_events()
 
     @intent_file_handler("calories.intent")
     def handle_calories_intent(self, message):
@@ -96,6 +104,7 @@ class NutrientsSkill(FallbackSkill):
 
     def pretty_nutrient(self, query="cheese"):
         n = self.search_nutrient(query)
+        sentences = []
         if n is None:
             query = "100 grams of " + query
             n = self.search_nutrient(query)
@@ -107,14 +116,21 @@ class NutrientsSkill(FallbackSkill):
                    n["ingredients"]["food"] + " has;"
         else:
             text = n["ingredients"]["food"] + " has;"
-
-        text += "\n" + str(n["calories"]) + " calories; "
+        sentences.append(text)
+        sentences.append(str(n["calories"]) + " calories")
 
         for nutrient in n["totalNutrients"]:
             nutrient = n["totalNutrients"][nutrient]
-            text += "\n" + str(nutrient["quantity"]) + " " + nutrient[
+            text = "\n" + str(nutrient["quantity"]) + " " + nutrient[
                 "unit"] + " of " + nutrient["label"]
-        return text
+
+            text = text.replace(" mg", " milligram")\
+                       .replace(u"µg", "microgram")\
+                       .replace(" g ", " gram ")\
+                       .replace("kcal", "kilocalories")\
+                       .replace("cal", "calories")
+            sentences.append(text)
+        return sentences
 
 
 def create_skill():
