@@ -1,0 +1,41 @@
+{
+ "name": "Nutrition Skill",
+ "skillMetadata": {
+        "sections": [
+            {
+                "name": "API Key Configuration",
+                "fields": [
+                    {
+                        "type": "label",
+                        "label": "get yours: https://developer.edamam.com"
+                    },
+                    {
+                        "name": "recipes_appid",
+                        "type": "text",
+                        "label": "recipes_appid",
+                        "value": "eceecbfb"
+                    },
+                    {
+                        "name": "recipes_appkey",
+                        "type": "text",
+                        "label": "recipes_appkey",
+                        "value": "83347a87348057d5ab183aade8106646"
+                    },
+                    {
+                        "name": "nutrition_appid",
+                        "type": "text",
+                        "label": "nutrition_appid",
+                        "value": "5a32958e"
+                    },
+                    {
+                        "name": "nutrition_appkey",
+                        "type": "text",
+                        "label": "nutrition_appkey",
+                        "value": "cabec6b9addb1666e1365303e509f450"
+                    }
+                ]
+            }
+        ]
+    }
+
+}
