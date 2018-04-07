@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from mycroft.skills.core import MycroftSkill, intent_file_handler
 from mycroft.util.log import LOG
 from mycroft.audio import wait_while_speaking
