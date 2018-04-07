@@ -52,6 +52,7 @@ class NutrientsSkill(MycroftSkill):
             self.speak("unknown food")
 
     def search_recipe(self, query="chicken"):
+        self.enclosure.mouth_think()
         url = 'https://api.edamam.com/search?q=' + query + '&app_id=' + \
               self.settings["recipes_appid"] + '&app_key=' + \
               self.settings["recipes_appkey"]
@@ -74,6 +75,7 @@ class NutrientsSkill(MycroftSkill):
         return recipes
 
     def search_nutrient(self, query="1 large apple", servings=1):
+        self.enclosure.mouth_think()
         ingredient = self.search_food(query)
         ingredients = [{"quantity": ingredient.get("quantity"),
                         "foodURI": ingredient["food"]["uri"],
@@ -95,6 +97,7 @@ class NutrientsSkill(MycroftSkill):
         return data
 
     def search_food(self, query="pizza"):
+        self.enclosure.mouth_think()
         query = query.replace(" ", "%20")
         url = 'https://api.edamam.com/api/food-database/parser?ingr=' + query + \
               '&app_id=' + self.settings["nutrition_appid"] + '&app_key=' + \
