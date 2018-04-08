@@ -109,7 +109,7 @@ class NutrientsSkill(MycroftSkill):
         n = self.search_nutrient(query)
         sentences = []
         if n is None:
-            query = "100 grams of " + query
+            query = "1 piece of " + query
             n = self.search_nutrient(query)
             if n is None:
                 return "could not find nutrients for " + query
