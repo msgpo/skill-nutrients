@@ -131,7 +131,7 @@ class NutrientsSkill(MycroftSkill):
                        .replace(" ug", " microgram")\
                        .replace(" g ", " gram ")\
                        .replace("kcal", "kilo calories")\
-                       .replace("cal", "calories")
+                       .replace(" cal ", " calories ")
             sentences.append(text)
         return sentences
 
