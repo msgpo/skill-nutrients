@@ -1,8 +1,6 @@
 from mycroft.skills.core import MycroftSkill, intent_file_handler
-from mycroft.util.log import LOG
 from mycroft.audio import wait_while_speaking
-import requests
-import json
+from py_edamam import Edaman
 
 
 __author__ = 'jarbas'
@@ -23,11 +21,16 @@ class NutrientsSkill(MycroftSkill):
             self.settings["nutrition_appkey"] = \
                 'cabec6b9addb1666e1365303e509f450'
 
+        self.edamam = Edaman(nutrition_appid=self.settings["nutrition_appid"],
+                           nutrition_appkey=self.settings["nutrition_appkey"],
+                           recipes_appid=self.settings["recipes_appid"],
+                           recipes_appkey=self.settings["recipes_appkey"])
+
     @intent_file_handler("ingredients.intent")
     def handle_ingredients_intent(self, message):
         sentence = message.data["sentence"]
         # TODO use dialog file
-        sentences = self.pretty_nutrient(sentence)
+        sentences = self.edamam.pretty_nutrient(sentence).split("\n")
         self.enclosure.deactivate_mouth_events()
         for idx, s in enumerate(sentences):
             self.speak(s)
@@ -39,10 +42,10 @@ class NutrientsSkill(MycroftSkill):
     @intent_file_handler("calories.intent")
     def handle_calories_intent(self, message):
         sentence = message.data["sentence"]
-        n = self.search_nutrient(sentence)
+        n = self.edamam.search_nutrient(sentence)
         if n is None:
             query = "1 gram of " + sentence
-            n = self.search_nutrient(query)
+            n = self.edamam.search_nutrient(query)
             n["name"] = "1 gram of " + n["name"]
         if n is not None:
             # TODO dialog file
@@ -50,91 +53,6 @@ class NutrientsSkill(MycroftSkill):
         else:
             # TODO dialog file
             self.speak("unknown food")
-
-    def search_recipe(self, query="chicken"):
-        self.enclosure.mouth_think()
-        url = 'https://api.edamam.com/search?q=' + query + '&app_id=' + \
-              self.settings["recipes_appid"] + '&app_key=' + \
-              self.settings["recipes_appkey"]
-
-        r = requests.get(url)
-        hits = r.json()["hits"]
-
-        recipes = {}
-        for hit in hits:
-            recipe = hit["recipe"]
-            name = recipe["label"]
-            recipes[name] = {}
-            recipes[name]["nutrients"] = recipe["totalNutrients"]
-            recipes[name]["cautions"] = recipe["cautions"]
-            recipes[name]["health_labels"] = recipe["healthLabels"]
-            recipes[name]["diet_labels"] = recipe["dietLabels"]
-            recipes[name]["calories"] = recipe["calories"]
-            recipes[name]["ingredients"] = recipe["ingredientLines"]
-            recipes[name]["url"] = recipe["url"]
-        return recipes
-
-    def search_nutrient(self, query="1 large apple", servings=1):
-        self.enclosure.mouth_think()
-        ingredient = self.search_food(query)
-        ingredients = [{"quantity": ingredient.get("quantity"),
-                        "foodURI": ingredient["food"]["uri"],
-                        "measureURI": ingredient.get("measure", {}).get(
-                            "uri")}]
-
-        url = 'https://api.edamam.com/api/food-database/nutrients?app_id=' + self.settings["nutrition_appid"] + '&app_key=' + self.settings["nutrition_appkey"]
-
-        data = {"ingredients": ingredients, "yield": servings}
-        r = requests.post(url,
-                          headers={"Content-Type": "application/json"},
-                          data=json.dumps(data))
-        data = r.json()
-        if "error" in data:
-            return None
-        data["ingredients"] = data["ingredients"][0]["parsed"][0]
-        data["name"] = ingredient["food"]["label"]
-        LOG.debug(str(data))
-        return data
-
-    def search_food(self, query="pizza"):
-        self.enclosure.mouth_think()
-        query = query.replace(" ", "%20")
-        url = 'https://api.edamam.com/api/food-database/parser?ingr=' + query + \
-              '&app_id=' + self.settings["nutrition_appid"] + '&app_key=' + \
-               self.settings["nutrition_appkey"] + '&page=0'
-        r = requests.get(url)
-        return r.json()["parsed"][0]
-
-    def pretty_nutrient(self, query="cheese"):
-        n = self.search_nutrient(query)
-        sentences = []
-        if n is None:
-            query = "1 piece of " + query
-            n = self.search_nutrient(query)
-            if n is None:
-                return "could not find nutrients for " + query
-        if not n["ingredients"]["status"] == "MISSING_QUANTITY":
-            text = str(n["ingredients"]["quantity"]) + " " + \
-                   n["ingredients"]["measure"] + " " + \
-                   n["ingredients"]["food"] + " has;"
-        else:
-            text = n["ingredients"]["food"] + " has;"
-        sentences.append(text)
-        sentences.append(str(n["calories"]) + " calories")
-
-        for nutrient in n["totalNutrients"]:
-            nutrient = n["totalNutrients"][nutrient]
-            text = "\n" + str(nutrient["quantity"]) + " " + nutrient[
-                "unit"] + " of " + nutrient["label"]
-
-            text = text.replace(" mg", " milligram")\
-                       .replace(" ug", " microgram")\
-                       .replace(" g ", " gram ")\
-                       .replace("kcal", "kilo calories")\
-                       .replace(" cal ", " calories ")
-            sentences.append(text)
-        return sentences
-
 
 def create_skill():
     return NutrientsSkill()
