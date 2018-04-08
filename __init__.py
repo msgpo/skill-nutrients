@@ -33,10 +33,12 @@ class NutrientsSkill(MycroftSkill):
         sentences = self.edamam.pretty_nutrient(sentence).split("\n")
         self.enclosure.deactivate_mouth_events()
         for idx, s in enumerate(sentences):
-            self.speak(s)
             if idx >= 2:
+                self.enclosure.deactivate_mouth_events()
                 self.enclosure.mouth_text(s)
+            self.speak(s)
             wait_while_speaking()
+
         self.enclosure.activate_mouth_events()
 
     @intent_file_handler("calories.intent")
